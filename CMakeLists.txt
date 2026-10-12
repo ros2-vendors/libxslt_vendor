@@ -30,9 +30,15 @@ macro(build_libxslt)
     list(APPEND extra_cmake_args "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
   endif()
   list(APPEND extra_cmake_args "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}")
-  # point libxslt at the libxml2 the libxml2_vendor installed into the prefix.
+  # libxslt's inner CMake does find_package(LibXml2 CONFIG). The package.xml
+  # <depend>libxml2_vendor</depend> makes colcon put libxml2's install root on
+  # CMAKE_PREFIX_PATH — but the VxWorks toolchain sets
+  # CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY, so find_package searches ONLY
+  # CMAKE_FIND_ROOT_PATH and ignores CMAKE_PREFIX_PATH / *_ROOT hints. Hence the
+  # dep's install root (the outer CMAKE_PREFIX_PATH, == export/root) must be
+  # forwarded into the inner build's find-root.
   list(APPEND extra_cmake_args
-    "-DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}"
+    "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
     -DLIBXSLT_WITH_PYTHON=OFF
     -DLIBXSLT_WITH_CRYPTO=OFF
     -DLIBXSLT_WITH_TESTS=OFF
